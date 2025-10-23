@@ -1,0 +1,305 @@
+# ===============================================================================
+# GITHUB ACTIONS WORKFLOW: NOTIFICACIÓN DE CONSULTA DE CLIENTE
+# ===============================================================================
+#
+# PROPÓSITO:
+# Este es el TERCER y último workflow de los 3 requeridos por la Actividad II.
+# Simula una notificación automática al equipo cuando alguien consulta o busca
+# información de un cliente específico en el sistema Axanet.
+#
+# CASOS DE USO EN EL SISTEMA REAL:
+# - Usuario ejecuta opción 2: "Buscar cliente (Demostración de Tabla Hash)"
+# - Usuario ejecuta opción 3: "Listar todos los clientes"
+# - Consultas administrativas o auditorías de información
+# - Accesos a datos sensibles que requieren logging/notificación
+#
+# IMPORTANCIA EN ENTORNOS REALES:
+# - Compliance y auditoría (GDPR, HIPAA, SOX)
+# - Detección de accesos no autorizados  
+# - Monitoreo de actividad de usuarios
+# - Analytics de uso del sistema
+#
+# REQUISITOS DE LA ACTIVIDAD CUMPLIDOS:
+# ✅ Workflow #3 (final) de los 3 mínimos requeridos  
+# ✅ Activación manual mediante workflow_dispatch
+# ✅ Formato de echo exacto: "CLIENT QUERY: [Nombre]. Notifying team: ..."
+# ✅ Integración conceptual con obtener_cliente() y listar_todos_clientes()
+# ✅ Incluye colaboradores ficticios según especificaciones
+# ✅ Usa ubuntu-latest para consistencia con otros workflows
+
+# ===============================================================================
+# SECCIÓN 1: METADATOS DEL WORKFLOW
+# ===============================================================================
+# El nombre debe ser único y descriptivo dentro del repositorio
+# Aparece en la lista de workflows en GitHub Actions UI
+name: Client Query Notification
+
+# ===============================================================================
+# SECCIÓN 2: CONFIGURACIÓN DE ACTIVACIÓN
+# ===============================================================================
+# Define los eventos que pueden disparar la ejecución de este workflow
+on:
+  
+  # TRIGGER PRINCIPAL: workflow_dispatch
+  # Permite ejecución manual desde la interfaz web de GitHub Actions
+  #
+  # PROCESO DE EJECUCIÓN MANUAL:
+  # 1. Ir a: https://github.com/[usuario]/axanet-client-manager/actions
+  # 2. Localizar "Client Query Notification" en sidebar izquierdo
+  # 3. Hacer clic en el nombre del workflow
+  # 4. Presionar botón verde "Run workflow"
+  # 5. Completar formulario emergente
+  # 6. Confirmar ejecución con segundo clic en "Run workflow"
+  # 7. Esperar ejecución y revisar logs
+  workflow_dispatch:
+    
+    # DEFINICIÓN DE INPUTS (PARÁMETROS DE ENTRADA)
+    # Estos inputs crean un formulario dinámico en la UI de GitHub
+    inputs:
+      
+      # PARÁMETRO: client_name
+      # Campo principal para especificar qué cliente está siendo consultado
+      client_name:
+        
+        # DESCRIPTION: Texto descriptivo mostrado al usuario
+        # Debe ser claro y específico para el contexto de consultas
+        description: 'Name of the client being queried'
+        
+        # REQUIRED: true = Campo obligatorio en el formulario
+        # El workflow no se puede ejecutar sin proporcionar este valor
+        # La UI mostrará el campo marcado con asterisco (*)
+        required: true
+        
+        # DEFAULT: Valor ejemplo pre-rellenado en el formulario
+        # Facilita testing rápido y demostraciones
+        # El usuario puede modificarlo o mantenerlo
+        default: 'Mario Lopez'
+        
+        # TYPE: Especifica el tipo de control de input en la UI
+        # string = Campo de texto libre (alternativas: number, boolean, choice)
+        type: string
+
+# ===============================================================================
+# SECCIÓN 3: DEFINICIÓN DE TRABAJOS
+# ===============================================================================
+# Un workflow puede contener múltiples jobs que se ejecutan en paralelo o secuencia
+# Para simplicidad académica, usamos un solo job
+jobs:
+  
+  # JOB IDENTIFIER: notify-team
+  # Nombre único del job dentro de este workflow
+  notify-team:
+    
+    # ESPECIFICACIÓN DEL RUNNER (ENTORNO DE EJECUCIÓN)
+    # ubuntu-latest: Máquina virtual Ubuntu más reciente disponible
+    #
+    # DETALLES TÉCNICOS DEL RUNNER:
+    # - OS: Ubuntu 22.04 LTS (al momento actual)
+    # - CPU: 2-core Intel/AMD x86_64
+    # - RAM: 7 GB disponibles
+    # - Almacenamiento: 14 GB SSD
+    # - Tiempo límite: 6 horas máximo por job
+    # - Costo: Gratuito para repositorios públicos
+    #
+    # ALTERNATIVAS DISPONIBLES:
+    # - ubuntu-20.04, ubuntu-18.04 (versiones específicas)
+    # - windows-latest, windows-2022, windows-2019
+    # - macos-latest, macos-12, macos-11
+    runs-on: ubuntu-latest
+    
+    # ===============================================================================
+    # SECCIÓN 4: SECUENCIA DE PASOS
+    # ===============================================================================
+    # Array ordenado de acciones que se ejecutan secuencialmente
+    # Cada step puede usar actions predefinidas o ejecutar comandos shell
+    steps:
+      
+      # PASO ÚNICO: Notificación de consulta realizada
+      # Este step cumple con todos los requisitos de output de la actividad
+      - name: Notify Team of Client Query
+        
+        # EJECUCIÓN DE COMANDOS SHELL
+        # run: permite ejecutar comandos bash/shell directamente en el runner
+        # Operador '|': Preserva formato multi-línea y saltos de línea
+        run: |
+          
+          # ═══════════════════════════════════════════════════════════════
+          # COMANDO 1: Mensaje principal de consulta
+          # ═══════════════════════════════════════════════════════════════
+          # CUMPLE FORMATO REQUERIDO: "CLIENT QUERY: [Nombre]. Notifying team: ..."
+          # 
+          # RESOLUCIÓN DE VARIABLE:
+          # ${{ github.event.inputs.client_name }}
+          #  │   │                │        │
+          #  │   │                │        └─ Nombre del input definido en workflow_dispatch
+          #  │   │                └─ Objeto que contiene datos del evento activador  
+          #  │   └─ Contexto del evento que disparó el workflow
+          #  └─ Contexto raíz de GitHub Actions (global)
+          #
+          # RESULTADO EJEMPLO: "CLIENT QUERY: Mario Lopez"
+          echo "CLIENT QUERY: ${{ github.event.inputs.client_name }}"
+          
+          # ═══════════════════════════════════════════════════════════════
+          # COMANDO 2: Identificación del equipo a notificar
+          # ═══════════════════════════════════════════════════════════════
+          # FORMATO SEGÚN ESPECIFICACIÓN: Usuario ejecutor + colaboradores ficticios
+          #
+          # VARIABLES DINÁMICAS Y ESTÁTICAS:
+          # - ${{ github.actor }}: Usuario GitHub que ejecutó el workflow (dinámico)
+          # - user1_github: Primer colaborador ficticio (estático, por requisitos)
+          # - user2_github: Segundo colaborador ficticio (estático, por requisitos)
+          #
+          # PROPÓSITO EN SISTEMA REAL:
+          # - Notificar a data protection officer (consultas GDPR)
+          # - Alertar a security team (accesos sensibles)
+          # - Informar a account managers (actividad de clientes)
+          #
+          # RESULTADO EJEMPLO: "Notifying team: marlonecotl, user1_github, user2_github"
+          echo "Notifying team: ${{ github.actor }}, user1_github, user2_github"
+          
+          # ═══════════════════════════════════════════════════════════════
+          # COMANDO 3: Registro temporal de la consulta
+          # ═══════════════════════════════════════════════════════════════
+          # $(date): Comando Unix estándar para obtener fecha/hora actual
+          # Zona horaria: UTC (Coordinated Universal Time)
+          # Formato estándar: "Day Mon DD HH:MM:SS UTC YYYY"
+          # Ejemplo: "Tue Oct 22 17:15:42 UTC 2024"
+          #
+          # IMPORTANCIA DEL TIMESTAMP:
+          # - Auditoría de accesos (compliance)
+          # - Correlación con logs del sistema
+          # - Detección de patrones temporales
+          # - Evidencia forense si es necesario
+          echo "Timestamp: $(date)"
+          
+          # ═══════════════════════════════════════════════════════════════
+          # COMANDO 4: Confirmación de operación exitosa
+          # ═══════════════════════════════════════════════════════════════
+          # Mensaje de retroalimentación positiva para el usuario
+          # Confirma que el sistema de notificaciones funciona correctamente
+          # No es requerido por la actividad, pero mejora UX profesional
+          echo "Query notification sent successfully!"
+
+# ===============================================================================
+# ANÁLISIS DETALLADO DE CONTEXTOS GITHUB ACTIONS:
+# ===============================================================================
+#
+# CONTEXTO: github.event
+# ├── Contiene información completa del evento que activó el workflow  
+# ├── Para workflow_dispatch incluye: inputs, ref, repository, sender
+# ├── Estructura JSON accesible mediante dot notation
+# └── Ejemplo: github.event.inputs.client_name
+#
+# CONTEXTO: github.actor  
+# ├── String con el username de GitHub del usuario ejecutor
+# ├── Disponible en todos los tipos de eventos (push, pull_request, etc.)
+# ├── Útil para auditoría y personalización de mensajes
+# └── Ejemplo: "marlonecotl", "ana-dev", "admin-user"
+#
+# OTROS CONTEXTOS DISPONIBLES (no usados aquí):
+# - github.repository: "owner/repo-name" 
+# - github.ref: rama o tag del evento
+# - github.sha: commit SHA del evento
+# - github.run_id: ID único de esta ejecución
+# - runner.os: Sistema operativo del runner
+#
+# ===============================================================================
+# CASOS DE USO REALES EN PRODUCCIÓN:
+# ===============================================================================
+#
+# ESCENARIO 1: Búsqueda individual de cliente
+# ┌─────────────────────────────────────────┐
+# │ 1. Usuario ejecuta main.py             │
+# │ 2. Selecciona "2. Buscar cliente"      │
+# │ 3. Ingresa "Mario Lopez"                │  
+# │ 4. Sistema encuentra y muestra datos    │
+# │ 5. TRIGGER: Workflow de auditoría      │
+# │ 6. Notificación a compliance team      │
+# └─────────────────────────────────────────┘
+#
+# ESCENARIO 2: Listado masivo de clientes
+# ┌─────────────────────────────────────────┐
+# │ 1. Usuario ejecuta main.py             │
+# │ 2. Selecciona "3. Listar todos"        │
+# │ 3. Sistema muestra base de datos       │
+# │ 4. TRIGGER: Alert por acceso masivo    │
+# │ 5. Revisión de seguridad automática    │
+# └─────────────────────────────────────────┘
+#
+# ESCENARIO 3: API query (futuro)
+# ┌─────────────────────────────────────────┐
+# │ 1. Sistema externo hace API call       │
+# │ 2. Endpoint: GET /api/clients/{name}    │
+# │ 3. Aplicación procesa request           │
+# │ 4. TRIGGER: Webhook a GitHub           │
+# │ 5. Logging de acceso externo           │
+# └─────────────────────────────────────────┘
+#
+# ===============================================================================
+# INTEGRACIONES AVANZADAS POSIBLES:
+# ===============================================================================
+#
+# SLACK NOTIFICATIONS:
+# - Canal dedicado #client-queries  
+# - Formato rich con detalles del cliente
+# - Botones para acciones rápidas
+# - Threading para conversaciones
+#
+# SECURITY MONITORING:
+# - Integración con SIEM (Splunk, ELK)
+# - Detección de patrones anómalos
+# - Alertas por consultas fuera de horario
+# - Correlación con otros eventos de seguridad
+#
+# ANALYTICS & REPORTING:
+# - Dashboard de consultas por usuario
+# - Métricas de clientes más consultados  
+# - Análisis de patrones de uso
+# - Reportes automáticos para management
+#
+# COMPLIANCE & AUDIT:
+# - Log immutable en blockchain
+# - Firma digital de eventos
+# - Retención según políticas legales
+# - Exportación para auditorías externas
+#
+# ===============================================================================
+# LOG OUTPUT ESPERADO:
+# ===============================================================================
+#
+# ✅ Ejecución exitosa mostrará:
+#
+# Run Notify Team of Client Query
+# CLIENT QUERY: Mario Lopez
+# Notifying team: marlonecotl, user1_github, user2_github
+# Timestamp: Tue Oct 22 17:15:42 UTC 2024
+# Query notification sent successfully!
+#
+# ===============================================================================
+# MÉTRICAS Y OBSERVABILIDAD AUTOMÁTICA:
+# ===============================================================================
+#
+# GitHub Actions rastrea automáticamente:
+# 
+# MÉTRICAS DE PERFORMANCE:
+# - Tiempo total de ejecución (típicamente < 30 segundos)
+# - Tiempo por step individual
+# - Uso de recursos del runner
+# - Latencia de inicialización  
+#
+# MÉTRICAS DE CONFIABILIDAD:
+# - Tasa de éxito vs fallos
+# - Tipos de errores más comunes
+# - Tiempo promedio de recuperación
+# - Disponibilidad del servicio
+#
+# MÉTRICAS DE USO:
+# - Frecuencia de ejecución por usuario
+# - Workflows más utilizados
+# - Patrones temporales de uso
+# - Distribución geográfica (si aplicable)
+#
+# ACCESO A MÉTRICAS:
+# Repository > Insights > Actions > [Workflow específico]
+#
+# ===============================================================================

@@ -1,0 +1,239 @@
+# ===============================================================================
+# GITHUB ACTIONS WORKFLOW: NOTIFICACIÓN DE ACTUALIZACIÓN DE CLIENTE  
+# ===============================================================================
+#
+# PROPÓSITO:
+# Este es el SEGUNDO workflow de los 3 requeridos por la Actividad II.
+# Simula una notificación automática al equipo cuando se actualiza la información
+# de un cliente existente en el sistema Axanet (agregar servicios, modificar datos).
+#
+# ESCENARIO DE USO REAL:
+# Se activaría automáticamente cuando un usuario ejecuta la opción 4 del menú
+# en main.py (Agregar servicio a cliente existente) o cualquier modificación
+# a un archivo de cliente existente.
+#
+# REQUISITOS DE LA ACTIVIDAD CUMPLIDOS:
+# ✅ Workflow #2 de los 3 mínimos requeridos
+# ✅ Activación manual mediante workflow_dispatch
+# ✅ Formato de echo exacto: "CLIENT UPDATED: [Nombre]. Notifying team: ..."
+# ✅ Integración conceptual con agregar_servicio_cliente() de main.py
+# ✅ Incluye colaboradores ficticios según especificaciones
+# ✅ Usa ubuntu-latest como entorno de ejecución
+
+# ===============================================================================
+# SECCIÓN 1: IDENTIFICACIÓN DEL WORKFLOW
+# ===============================================================================
+# El nombre aparece en la barra lateral izquierda de GitHub Actions
+# Debe ser descriptivo para distinguirlo de los otros 2 workflows
+name: Client Update Notification
+
+# ===============================================================================
+# SECCIÓN 2: EVENTOS DESENCADENADORES
+# ===============================================================================
+# Define cuándo y cómo se puede ejecutar este workflow
+on:
+  # WORKFLOW_DISPATCH: Ejecución manual desde la interfaz web de GitHub
+  # 
+  # CÓMO EJECUTAR:
+  # 1. Navegar a: GitHub Repository > Actions tab
+  # 2. Buscar "Client Update Notification" en el sidebar izquierdo  
+  # 3. Hacer clic en el workflow
+  # 4. Presionar botón "Run workflow" (verde)
+  # 5. Completar el formulario que aparece
+  # 6. Confirmar ejecución
+  workflow_dispatch:
+    
+    # PARÁMETROS DE ENTRADA (INPUT PARAMETERS)
+    # Estos crean un formulario dinámico en la UI de GitHub
+    inputs:
+      
+      # INPUT: client_name
+      # Campo de texto donde el usuario ingresa el nombre del cliente actualizado
+      client_name:
+        
+        # DESCRIPTION: Etiqueta que ve el usuario en el formulario web
+        # Debe ser clara y específica para este caso de uso
+        description: 'Name of the client being updated'
+        
+        # REQUIRED: true = Campo obligatorio, no se puede ejecutar sin él
+        # El botón "Run workflow" estará deshabilitado hasta completarlo
+        required: true
+        
+        # DEFAULT: Valor pre-poblado para facilitar testing y demostración
+        # El usuario puede cambiarlo o dejarlo como está
+        default: 'Ana Garcia'
+        
+        # TYPE: Tipo de dato del input (string, number, boolean, choice)
+        # string = permite cualquier texto libre
+        type: string
+
+# ===============================================================================
+# SECCIÓN 3: DEFINICIÓN DE TRABAJOS (JOBS)
+# ===============================================================================
+# Los jobs son unidades de trabajo que se ejecutan independientemente
+# Este workflow tiene un solo job para mantener simplicidad académica
+jobs:
+  
+  # JOB ID: notify-team
+  # Identificador único dentro de este workflow
+  notify-team:
+    
+    # RUNNER: Máquina virtual donde se ejecuta el job
+    # ubuntu-latest = Última versión estable de Ubuntu (actualmente 22.04)
+    # 
+    # ALTERNATIVAS DISPONIBLES:
+    # - windows-latest (Windows Server 2022)
+    # - macos-latest (macOS Monterey)  
+    # - ubuntu-20.04, ubuntu-18.04 (versiones específicas)
+    #
+    # RAZÓN DE ELECCIÓN: Ubuntu es el estándar para CI/CD por ser:
+    # - Más rápido en inicialización
+    # - Menor costo computacional  
+    # - Mayor compatibilidad con herramientas
+    runs-on: ubuntu-latest
+    
+    # ===============================================================================
+    # SECCIÓN 4: PASOS DE EJECUCIÓN (STEPS)
+    # ===============================================================================
+    # Lista ordenada de acciones que se ejecutan secuencialmente
+    steps:
+      
+      # STEP 1: Envío de notificación de actualización
+      # Este es el único step necesario para cumplir los requisitos
+      - name: Notify Team of Client Update
+        
+        # COMANDO RUN: Ejecuta comandos shell/bash en el runner de Ubuntu
+        # El operador '|' preserva saltos de línea y permite múltiples comandos
+        run: |
+          
+          # ═══════════════════════════════════════════════════════════════
+          # COMANDO 1: Mensaje principal de actualización
+          # ═══════════════════════════════════════════════════════════════
+          # FORMATO REQUERIDO POR ACTIVIDAD: "CLIENT UPDATED: [Nombre]..."
+          # 
+          # SINTAXIS DE VARIABLE GITHUB:
+          # ${{ github.event.inputs.client_name }}
+          #  │                │        │
+          #  │                │        └─ Nombre del input definido arriba
+          #  │                └─ Datos del evento que activó el workflow
+          #  └─ Contexto raíz de GitHub Actions
+          #
+          # EJEMPLO DE SALIDA: "CLIENT UPDATED: Ana Garcia"
+          echo "CLIENT UPDATED: ${{ github.event.inputs.client_name }}"
+          
+          # ═══════════════════════════════════════════════════════════════
+          # COMANDO 2: Lista del equipo a notificar
+          # ═══════════════════════════════════════════════════════════════
+          # FORMATO REQUERIDO: Usuario actual + colaboradores ficticios
+          #
+          # VARIABLES UTILIZADAS:
+          # - ${{ github.actor }}: Usuario que ejecutó el workflow (dinámico)
+          # - user1_github: Colaborador ficticio 1 (estático, según requisitos)
+          # - user2_github: Colaborador ficticio 2 (estático, según requisitos)
+          #
+          # EJEMPLO DE SALIDA: "Notifying team: marlonecotl, user1_github, user2_github"
+          echo "Notifying team: ${{ github.actor }}, user1_github, user2_github"
+          
+          # ═══════════════════════════════════════════════════════════════
+          # COMANDO 3: Timestamp de la operación  
+          # ═══════════════════════════════════════════════════════════════
+          # $(date): Comando Unix que obtiene fecha y hora actual del sistema
+          # Formato típico: "Tue Oct 22 15:30:45 UTC 2024"
+          # Proporciona trazabilidad temporal de las notificaciones
+          echo "Timestamp: $(date)"
+          
+          # ═══════════════════════════════════════════════════════════════
+          # COMANDO 4: Confirmación de éxito
+          # ═══════════════════════════════════════════════════════════════
+          # Mensaje adicional para mejorar feedback del usuario
+          # No requerido por la actividad, pero demuestra buenas prácticas
+          echo "Update notification sent successfully!"
+
+# ===============================================================================
+# ANÁLISIS DE CONTEXTOS GITHUB UTILIZADOS:
+# ===============================================================================
+#
+# CONTEXTO: github.event.inputs
+# ├── Contiene todos los inputs del workflow_dispatch
+# ├── Solo disponible cuando el workflow se activa manualmente
+# ├── Estructura: github.event.inputs.<input_name>
+# └── En nuestro caso: github.event.inputs.client_name
+#
+# CONTEXTO: github.actor  
+# ├── Usuario que ejecutó/activó el workflow
+# ├── Siempre disponible (automático o manual)
+# ├── Es el username de GitHub del ejecutor
+# └── Ejemplo: "marlonecotl", "ana-garcia-dev", etc.
+#
+# ===============================================================================
+# CASOS DE USO EN SISTEMA REAL:
+# ===============================================================================
+#
+# ESCENARIO 1: Agregar servicio a cliente
+# ┌─────────────────────────────────────┐
+# │ 1. Usuario ejecuta main.py         │
+# │ 2. Selecciona opción 4              │  
+# │ 3. Elige cliente "Ana Garcia"       │
+# │ 4. Agrega "Instalación WiFi"        │
+# │ 5. Sistema actualiza archivo        │
+# │ 6. SE DISPARA ESTE WORKFLOW        │
+# └─────────────────────────────────────┘
+#
+# ESCENARIO 2: Modificar datos cliente
+# ┌─────────────────────────────────────┐
+# │ 1. Admin modifica cliente.txt       │
+# │ 2. Git detecta cambio               │
+# │ 3. Webhook activa workflow          │  
+# │ 4. Equipo recibe notificación       │
+# └─────────────────────────────────────┘
+#
+# ===============================================================================
+# INTEGRACIÓN CON OTRAS HERRAMIENTAS (EXTENSIONES FUTURAS):
+# ===============================================================================
+#
+# SLACK INTEGRATION:
+# - Agregar step para enviar mensaje a canal #clientes
+# - Usar Slack Web API o Incoming Webhooks
+# - Incluir detalles del cliente y cambios realizados
+#
+# EMAIL NOTIFICATIONS:
+# - Configurar SMTP para envío de correos
+# - Lista de distribución del equipo comercial
+# - Template HTML con información estructurada  
+#
+# JIRA/ASANA INTEGRATION:
+# - Crear ticket automático de seguimiento
+# - Asignar a account manager del cliente
+# - Adjuntar información relevante
+#
+# ANALYTICS/MONITORING:
+# - Enviar evento a Google Analytics
+# - Registrar métricas en DataDog/New Relic
+# - Dashboard de actividad de clientes
+#
+# ===============================================================================
+# SALIDA ESPERADA EN LOGS DE GITHUB ACTIONS:
+# ===============================================================================
+#
+# ✅ Successful execution log:
+# 
+# Run Notify Team of Client Update
+# CLIENT UPDATED: Ana Garcia
+# Notifying team: marlonecotl, user1_github, user2_github
+# Timestamp: Tue Oct 22 16:45:30 UTC 2024  
+# Update notification sent successfully!
+#
+# ===============================================================================
+# MÉTRICAS Y OBSERVABILIDAD:
+# ===============================================================================
+#
+# GitHub Actions automáticamente rastrea:
+# - Tiempo de ejecución del workflow
+# - Éxito/fallo de cada step
+# - Uso de recursos (CPU, memoria)
+# - Frecuencia de ejecución
+# - Usuario que ejecuta más workflows
+#
+# Disponible en: Repository > Insights > Actions
+#
+# ===============================================================================

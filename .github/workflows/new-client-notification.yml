@@ -1,0 +1,180 @@
+# ===============================================================================
+# GITHUB ACTIONS WORKFLOW: NOTIFICACIÓN DE NUEVO CLIENTE
+# ===============================================================================
+# 
+# PROPÓSITO:
+# Este workflow simula una notificación automática al equipo de desarrollo
+# cuando se crea un nuevo cliente en el sistema Axanet. Cumple con los
+# requisitos específicos de la Actividad II - Parte 2.
+#
+# INTEGRACIÓN CON EL SISTEMA:
+# En un entorno real, este workflow se activaría automáticamente cuando
+# la función crear_cliente() en main.py sea ejecutada exitosamente.
+# 
+# REQUISITOS DE LA ACTIVIDAD CUMPLIDOS:
+# ✅ Flujo 1 de los 3 mínimos requeridos
+# ✅ Se activa manualmente (workflow_dispatch) 
+# ✅ Formato de echo según especificación exacta de la actividad
+# ✅ Incluye colaboradores ficticios como se solicita
+# ✅ Usa ubuntu-latest como entorno de ejecución
+# ✅ Mensaje: "NEW CLIENT CREATED: [Nombre]. Notifying team: ..."
+
+# ===============================================================================
+# SECCIÓN 1: NOMBRE DEL WORKFLOW
+# ===============================================================================
+# La propiedad 'name' define el nombre que aparecerá en la UI de GitHub Actions
+# Este nombre se muestra en la pestaña "Actions" del repositorio
+name: New Client Notification
+
+# ===============================================================================
+# SECCIÓN 2: TRIGGERS (DESENCADENADORES)
+# ===============================================================================
+# La sección 'on' define cuándo y cómo se ejecuta este workflow
+on:
+  # TRIGGER: workflow_dispatch
+  # Este trigger permite ejecutar el workflow manualmente desde la UI de GitHub
+  # Cumple con el requisito: "Cada flujo se activa manualmente desde GitHub UI"
+  #
+  # CÓMO USARLO:
+  # 1. Ir a GitHub > Actions
+  # 2. Seleccionar "New Client Notification" en la barra lateral
+  # 3. Hacer clic en "Run workflow"
+  # 4. Ingresar el nombre del cliente
+  # 5. Hacer clic en "Run workflow" para ejecutar
+  workflow_dispatch:
+    # INPUTS: Parámetros que el usuario puede proporcionar al ejecutar manualmente
+    inputs:
+      client_name:
+        # DESCRIPCIÓN: Texto que ve el usuario en el formulario de ejecución
+        description: 'Name of the new client'
+        
+        # REQUIRED: true = el usuario DEBE proporcionar este valor
+        # Si es false, el valor sería opcional
+        required: true
+        
+        # DEFAULT: Valor que aparece pre-llenado en el formulario
+        # Facilita el testing y la demostración
+        default: 'Juan Perez'
+        
+        # TYPE: Tipo de dato esperado (string, number, boolean, choice)
+        # string = texto libre que puede ingresar el usuario
+        type: string
+
+# ===============================================================================
+# SECCIÓN 3: JOBS (TRABAJOS)
+# ===============================================================================
+# Un workflow puede tener múltiples jobs que se ejecutan en paralelo o secuencia
+# En nuestro caso, solo tenemos un job llamado 'notify-team'
+jobs:
+  # JOB NAME: notify-team
+  # Este es el identificador único del job dentro del workflow
+  notify-team:
+    
+    # RUNS-ON: Especifica el tipo de máquina virtual donde se ejecuta el job
+    # ubuntu-latest = La versión más reciente de Ubuntu disponible en GitHub
+    # Otras opciones: windows-latest, macos-latest, ubuntu-20.04, etc.
+    # RAZÓN DE ELECCIÓN: Ubuntu es más rápido, estable y es el estándar para CI/CD
+    runs-on: ubuntu-latest
+    
+    # ===============================================================================
+    # SECCIÓN 4: STEPS (PASOS)
+    # ===============================================================================
+    # Los 'steps' son las acciones individuales que se ejecutan secuencialmente
+    # dentro del job. Cada step puede ejecutar comandos o usar actions predefinidas.
+    steps:
+      
+      # STEP 1: Notificación al Equipo
+      # Este step ejecuta los comandos de notificación según los requisitos
+      - name: Notify Team of New Client
+        
+        # COMANDO RUN: Ejecuta comandos de shell directamente en el runner
+        # El símbolo '|' permite comandos multi-línea manteniendo formato
+        run: |
+          
+          # ===============================================================
+          # COMANDO 1: Echo del mensaje principal
+          # ===============================================================
+          # FORMATO REQUERIDO: "NEW CLIENT CREATED: [Nombre]. Notifying team: ..."
+          # ${{ github.event.inputs.client_name }} = Variable que contiene el nombre
+          # ingresado por el usuario en el formulario de ejecución manual
+          echo "NEW CLIENT CREATED: ${{ github.event.inputs.client_name }}"
+          
+          # ===============================================================
+          # COMANDO 2: Lista de notificaciones al equipo  
+          # ===============================================================
+          # FORMATO REQUERIDO: Incluir el usuario actual + colaboradores ficticios
+          # ${{ github.actor }} = Usuario que ejecutó el workflow (dinámico)
+          # user1_github, user2_github = Colaboradores ficticios (requisito)
+          echo "Notifying team: ${{ github.actor }}, user1_github, user2_github"
+          
+          # ===============================================================
+          # COMANDO 3: Timestamp de la notificación
+          # ===============================================================
+          # $(date) = Comando de Linux que obtiene fecha y hora actual
+          # Proporciona trazabilidad de cuándo se ejecutó la notificación
+          echo "Timestamp: $(date)"
+          
+          # ===============================================================
+          # COMANDO 4: Confirmación de éxito
+          # ===============================================================
+          # Mensaje adicional para confirmar que la notificación se envió
+          # No es requerido por la actividad, pero mejora la UX
+          echo "Notification sent successfully!"
+
+# ===============================================================================
+# VARIABLES DE CONTEXTO GITHUB UTILIZADAS:
+# ===============================================================================
+#
+# ${{ github.event.inputs.client_name }}
+# │                │        │
+# │                │        └── Nombre del input definido en workflow_dispatch
+# │                └── Datos del evento que disparó el workflow  
+# └── Contexto global de GitHub Actions
+#
+# ${{ github.actor }}
+# │                │
+# │                └── Usuario que ejecutó el workflow manualmente
+# └── Contexto global de GitHub Actions
+#
+# ===============================================================================
+# FLUJO DE EJECUCIÓN COMPLETO:
+# ===============================================================================
+#
+# 1. Usuario va a GitHub > Actions
+# 2. Selecciona "New Client Notification"
+# 3. Hace clic en "Run workflow"
+# 4. GitHub muestra formulario con campo "Name of the new client"
+# 5. Usuario ingresa nombre (ej: "Ana García") o usa default "Juan Perez"
+# 6. Usuario confirma ejecución
+# 7. GitHub Actions inicia una máquina virtual Ubuntu
+# 8. Se ejecutan los 4 comandos echo en secuencia
+# 9. Se muestran los logs en la UI de GitHub Actions
+# 10. El workflow se marca como exitoso ✅
+#
+# ===============================================================================
+# SALIDA ESPERADA EN LOS LOGS:
+# ===============================================================================
+#
+# NEW CLIENT CREATED: Ana García
+# Notifying team: marlonecotl, user1_github, user2_github  
+# Timestamp: Tue Oct 22 15:30:45 UTC 2024
+# Notification sent successfully!
+#
+# ===============================================================================
+# CONEXIÓN CON LA APLICACIÓN PYTHON:
+# ===============================================================================
+#
+# Este workflow simula lo que pasaría en un sistema real cuando:
+# 1. Usuario ejecuta main.py
+# 2. Selecciona opción 1 (Crear nuevo cliente)
+# 3. Ingresa datos del cliente
+# 4. El sistema crea el archivo del cliente
+# 5. AUTOMÁTICAMENTE se dispararía esta notificación al equipo
+#
+# Para integración real se usarían:
+# - Webhooks de GitHub
+# - Repository dispatch events  
+# - Slack/Teams/Email notifications
+# - Sistemas de monitoreo como DataDog
+#
+# ===============================================================================

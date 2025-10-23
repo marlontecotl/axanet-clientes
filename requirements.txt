@@ -1,3 +1,17 @@
-pytest
-black
-flake8
+# Sistema de Gestión de Clientes Axanet - Versión Académica
+# 
+# Este sistema no requiere dependencias externas.
+# Utiliza únicamente librerías estándar de Python 3.8+
+#
+# Para ejecutar el sistema:
+#   python main.py
+#
+# No es necesario instalar ningún paquete adicional.
+# Todas las funcionalidades están implementadas con:
+# - pathlib (gestión de archivos)
+# - datetime (timestamps)
+# - re (expresiones regulares)
+# - typing (hints de tipos)
+# - os (operaciones del sistema)
+
+# Sin dependencias externas - ¡Solo Python estándar!
