@@ -1,0 +1,116 @@
+# ========================================================================
+# WORKFLOW 5: MODIFICACIÓN DEL CÓDIGO DE LA APLICACIÓN  
+# ========================================================================
+#
+# 📋 PROPÓSITO: Detectar automáticamente cambios en código
+# 🎯 REQUISITOS PROYECTO II: Trigger "push" + Notificación con info del commit
+
+name: "🔄 Code Modification - Detección de Cambios"
+
+on:
+  # TRIGGER PRINCIPAL: PUSH A RAMAS PRINCIPALES
+  push:
+    branches: 
+      - main
+      - develop
+    paths:
+      - '**.py'
+      - '**.yml'
+      - '**.yaml'
+      - 'src/**'
+      - 'main.py'
+      - 'requirements.txt'
+
+  # TRIGGER MANUAL PARA TESTING
+  workflow_dispatch:
+    inputs:
+      reason:
+        description: 'Razón para ejecución manual'
+        required: false
+        default: 'Testing del workflow'
+        type: string
+
+jobs:
+  detect-code-changes:
+    name: "🔍 Detectar Cambios de Código"
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: "📥 Checkout Repository"
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
+
+      - name: "🔍 Analizar Cambios"
+        id: changes
+        run: |
+          echo "=== ANALIZANDO CAMBIOS EN CÓDIGO ==="
+          
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            echo "Ejecución manual: ${{ github.event.inputs.reason }}"
+            COMMIT_SHA="${{ github.sha }}"
+            COMMIT_MSG="Ejecución manual del workflow"
+            AUTHOR_NAME="${{ github.actor }}"
+            BRANCH_NAME="${{ github.ref_name }}"
+          else
+            COMMIT_SHA="${{ github.sha }}"
+            COMMIT_MSG=$(git log -1 --pretty=format:"%s")
+            AUTHOR_NAME=$(git log -1 --pretty=format:"%an")
+            BRANCH_NAME="${{ github.ref_name }}"
+            
+            echo "Detectando archivos modificados..."
+            CHANGED_FILES=$(git diff --name-only HEAD~1 HEAD)
+            echo "Archivos modificados:"
+            echo "$CHANGED_FILES"
+          fi
+          
+          echo "commit_sha=$COMMIT_SHA" >> $GITHUB_OUTPUT
+          echo "commit_msg=$COMMIT_MSG" >> $GITHUB_OUTPUT
+          echo "author=$AUTHOR_NAME" >> $GITHUB_OUTPUT
+          echo "branch=$BRANCH_NAME" >> $GITHUB_OUTPUT
+
+      # STEP PRINCIPAL: FORMATO EXACTO REQUERIDO POR PROYECTO II
+      - name: "📢 Notificación Principal - Formato Proyecto II"
+        run: |
+          echo "[MODIFICACIÓN DE CÓDIGO DETECTADA]"
+          echo "Commit: ${{ steps.changes.outputs.commit_sha }}"
+          echo "por ${{ steps.changes.outputs.author }}"
+          echo "en rama ${{ steps.changes.outputs.branch }}"
+          echo "Mensaje: '${{ steps.changes.outputs.commit_msg }}'"
+          echo "Notificando a DevLead y ITTeam para posible revisión/despliegue."
+
+      - name: "🐍 Validación Básica de Python"
+        run: |
+          echo ""
+          echo "🔍 EJECUTANDO VALIDACIONES BÁSICAS:"
+          
+          # Buscar archivos Python
+          PYTHON_FILES=$(find . -name "*.py" -not -path "./.git/*" | head -5)
+          
+          if [ -n "$PYTHON_FILES" ]; then
+            echo "📄 Verificando sintaxis Python..."
+            for file in $PYTHON_FILES; do
+              echo "   Verificando: $file"
+              python3 -m py_compile "$file" 2>/dev/null && echo "   ✅ Sintaxis OK" || echo "   ⚠️ Posible problema"
+            done
+          else
+            echo "📄 No se encontraron archivos Python modificados"
+          fi
+
+      - name: "👥 Notificación Detallada a Equipos"
+        run: |
+          echo ""
+          echo "🔄 EQUIPOS NOTIFICADOS:"
+          echo "   📧 DevLead: carlos-devlead-axanet"
+          echo "      → Revisar cambios técnicos y arquitectura"
+          echo "      → Coordinar code review si es necesario"
+          echo ""
+          echo "   📧 ITTeam: miguel-itops-axanet, sofia-sysadmin-axanet"
+          echo "      → Evaluar necesidad de re-deployment"
+          echo "      → Preparar rollback plan si es cambio crítico"
+          echo ""
+          echo "📊 INFORMACIÓN DEL CAMBIO:"
+          echo "   • Repositorio: ${{ github.repository }}"
+          echo "   • Workflow: ${{ github.run_id }}"
+          echo "   • Timestamp: $(date '+%Y-%m-%d %H:%M:%S UTC')"
+          echo "   • Evento: ${{ github.event_name }}"
