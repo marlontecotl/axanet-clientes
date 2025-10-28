@@ -20,9 +20,6 @@ on:
       - 'src/**'
       - 'main.py'
       - 'requirements.txt'
-    paths-ignore:
-      - '**.md'
-      - 'docs/**'
 
   # TRIGGER MANUAL PARA TESTING
   workflow_dispatch:
