@@ -1,0 +1,84 @@
+# ========================================================================
+# WORKFLOW 4: SOLICITUD DE MEJORA A LA APLICACIÓN
+# ========================================================================
+#
+# 📋 PROPÓSITO: Gestionar solicitudes de mejora a funcionalidades existentes
+# 🎯 REQUISITOS PROYECTO II: workflow_dispatch + Issues con etiqueta "enhancement"
+
+name: "🔧 Enhancement Request - Solicitud de Mejora"
+
+on:
+  # TRIGGER 1: EJECUCIÓN MANUAL (REQUERIDO)
+  workflow_dispatch:
+    inputs:
+      enhancement_title:
+        description: 'Título de la mejora solicitada'
+        required: true
+        default: 'Mejorar validación de datos de entrada'
+        type: string
+      enhancement_description:
+        description: 'Descripción detallada de la mejora'
+        required: true
+        default: 'Implementar validación más robusta para emails y teléfonos'
+        type: string
+
+  # TRIGGER 2: ISSUES CON ETIQUETA (SUMA PUNTOS)
+  issues:
+    types: [opened, labeled]
+
+jobs:
+  process-enhancement-request:
+    name: "🔧 Procesar Solicitud de Mejora"
+    runs-on: ubuntu-latest
+    
+    if: |
+      github.event_name == 'workflow_dispatch' || 
+      (github.event_name == 'issues' && 
+       contains(github.event.issue.labels.*.name, 'enhancement'))
+    
+    steps:
+      - name: "�� Identificar Fuente"
+        id: source
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            echo "Fuente: Ejecución manual por ${{ github.actor }}"
+            echo "source=manual" >> $GITHUB_OUTPUT
+          else
+            echo "Fuente: Issue #${{ github.event.issue.number }} por ${{ github.event.issue.user.login }}"
+            echo "source=issue" >> $GITHUB_OUTPUT
+          fi
+
+      - name: "�� Extraer Datos"
+        id: data
+        run: |
+          if [ "${{ steps.source.outputs.source }}" = "manual" ]; then
+            TITLE="${{ github.event.inputs.enhancement_title }}"
+            DESCRIPTION="${{ github.event.inputs.enhancement_description }}"
+          else
+            TITLE="${{ github.event.issue.title }}"
+            DESCRIPTION="${{ github.event.issue.body }}"
+          fi
+          
+          echo "title=$TITLE" >> $GITHUB_OUTPUT
+          echo "description=$DESCRIPTION" >> $GITHUB_OUTPUT
+
+      # STEP PRINCIPAL: FORMATO EXACTO REQUERIDO POR PROYECTO II
+      - name: "�� Notificación Principal - Formato Proyecto II"
+        run: |
+          echo "[SOLICITUD DE MEJORA RECIBIDA]"
+          echo "Título: '${{ steps.data.outputs.title }}'"
+          echo "Descripción: '${{ steps.data.outputs.description }}'"
+          echo "Asignando a DevLead para revisión."
+          echo "Notificando a todos los equipos."
+
+      - name: "👥 Notificación Detallada"
+        run: |
+          echo ""
+          echo "🔧 EQUIPOS NOTIFICADOS:"
+          echo "   📧 DevTeam: carlos-devlead-axanet, ana-dev-axanet"
+          echo "   📧 ITTeam: miguel-itops-axanet, sofia-sysadmin-axanet"  
+          echo "   📧 CustServTeam: roberto-cs-axanet, laura-support-axanet"
+          echo ""
+          echo "📋 Workflow ejecutado: $(date '+%Y-%m-%d %H:%M:%S UTC')"
+          echo "🏛️ Repositorio: ${{ github.repository }}"
+          echo "🔗 Run ID: ${{ github.run_id }}"

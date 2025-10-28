@@ -1,0 +1,163 @@
+# ========================================================================
+# WORKFLOW 6: SOLICITUD DE NUEVAS FUNCIONES A LA APLICACIÓN
+# ========================================================================
+#
+# 📋 PROPÓSITO: Gestionar solicitudes de funcionalidades completamente nuevas
+# �� REQUISITOS PROYECTO II: workflow_dispatch + Issues con etiqueta "new-feature"
+
+name: "🚀 New Feature Request - Solicitud de Nueva Función"
+
+on:
+  # TRIGGER 1: EJECUCIÓN MANUAL (REQUERIDO)
+  workflow_dispatch:
+    inputs:
+      feature_title:
+        description: 'Título de la nueva funcionalidad'
+        required: true
+        default: 'Exportación de datos a Excel'
+        type: string
+      feature_description:
+        description: 'Descripción detallada de la funcionalidad'
+        required: true
+        default: 'Permitir exportar la lista de clientes a formato Excel'
+        type: string
+      business_priority:
+        description: 'Prioridad de negocio'
+        required: true
+        default: 'medium'
+        type: choice
+        options:
+        - low
+        - medium
+        - high
+        - critical
+
+  # TRIGGER 2: ISSUES CON ETIQUETA (SUMA PUNTOS)
+  issues:
+    types: [opened, labeled]
+
+jobs:
+  process-feature-request:
+    name: "🚀 Procesar Solicitud de Nueva Función"
+    runs-on: ubuntu-latest
+    
+    if: |
+      github.event_name == 'workflow_dispatch' || 
+      (github.event_name == 'issues' && 
+       contains(github.event.issue.labels.*.name, 'new-feature'))
+    
+    steps:
+      - name: "🔍 Identificar Fuente"
+        id: source
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            echo "Fuente: Ejecución manual por ${{ github.actor }}"
+            echo "source=manual" >> $GITHUB_OUTPUT
+          else
+            echo "Fuente: Issue #${{ github.event.issue.number }} por ${{ github.event.issue.user.login }}"
+            echo "source=issue" >> $GITHUB_OUTPUT
+          fi
+
+      - name: "📊 Extraer Datos de la Función"
+        id: data
+        run: |
+          if [ "${{ steps.source.outputs.source }}" = "manual" ]; then
+            TITLE="${{ github.event.inputs.feature_title }}"
+            DESCRIPTION="${{ github.event.inputs.feature_description }}"
+            PRIORITY="${{ github.event.inputs.business_priority }}"
+          else
+            TITLE="${{ github.event.issue.title }}"
+            DESCRIPTION="${{ github.event.issue.body }}"
+            PRIORITY="medium"
+          fi
+          
+          echo "title=$TITLE" >> $GITHUB_OUTPUT
+          echo "description=$DESCRIPTION" >> $GITHUB_OUTPUT
+          echo "priority=$PRIORITY" >> $GITHUB_OUTPUT
+
+      - name: "🆔 Generar Feature ID"
+        id: tracking
+        run: |
+          TIMESTAMP=$(date '+%Y%m%d_%H%M')
+          HASH=$(echo "${{ steps.data.outputs.title }}" | sha256sum | cut -c1-6)
+          FEATURE_ID="FEAT_${TIMESTAMP}_${HASH}"
+          
+          echo "feature_id=$FEATURE_ID" >> $GITHUB_OUTPUT
+          echo "🆔 Feature ID generado: $FEATURE_ID"
+
+      # STEP PRINCIPAL: FORMATO EXACTO REQUERIDO POR PROYECTO II
+      - name: "📢 Notificación Principal - Formato Proyecto II"
+        run: |
+          echo "[SOLICITUD DE NUEVA FUNCIÓN]"
+          echo "Título: '${{ steps.data.outputs.title }}'"
+          echo "Descripción: '${{ steps.data.outputs.description }}'"
+          echo "Pasando a comité de priorización (DevLead, ITOpsLead, CustServLead)."
+          echo "Notificando a todos."
+
+      - name: "🏛️ Comité de Priorización"
+        run: |
+          echo ""
+          echo "🚀 COMITÉ DE PRIORIZACIÓN CONVOCADO:"
+          echo ""
+          echo "👑 MIEMBROS DEL COMITÉ:"
+          echo "   🏆 DevLead: carlos-devlead-axanet"
+          echo "      → Evaluará factibilidad técnica y esfuerzo"
+          echo "      → Identificará dependencias y riesgos"
+          echo ""
+          echo "   🔧 ITOpsLead: miguel-itops-axanet"  
+          echo "      → Evaluará impacto en infraestructura AWS"
+          echo "      → Considerará aspectos de seguridad y deployment"
+          echo ""
+          echo "   👥 CustServLead: roberto-cs-axanet"
+          echo "      → Validará utilidad para usuarios finales"
+          echo "      → Definirá criterios de aceptación"
+
+      - name: "📊 Análisis de Prioridad"
+        run: |
+          PRIORITY="${{ steps.data.outputs.priority }}"
+          
+          echo ""
+          echo "📊 ANÁLISIS DE PRIORIDAD: $PRIORITY"
+          
+          case $PRIORITY in
+            "critical")
+              echo "🚨 PRIORIDAD CRÍTICA:"
+              echo "   • Evaluación inmediata requerida"
+              echo "   • Posible interrupción de otros desarrollos"
+              echo "   • SLA: Decisión en 24-48 horas"
+              ;;
+            "high")
+              echo "🔥 PRIORIDAD ALTA:"
+              echo "   • Incluir en próximo sprint planning"
+              echo "   • Evaluación detallada en 1 semana"
+              echo "   • SLA: Decisión en 1-2 semanas"
+              ;;
+            "medium")
+              echo "⚖️ PRIORIDAD MEDIA:"
+              echo "   • Evaluación en planning semanal"
+              echo "   • Incluir en backlog priorizado"
+              echo "   • SLA: Decisión en 2-4 semanas"
+              ;;
+            "low")
+              echo "📋 PRIORIDAD BAJA:"
+              echo "   • Incluir en backlog de features"
+              echo "   • Evaluación cuando recursos disponibles"
+              echo "   • SLA: Decisión en 1-2 meses"
+              ;;
+          esac
+
+      - name: "📋 Información del Workflow"
+        run: |
+          echo ""
+          echo "📋 DETALLES DEL PROCESAMIENTO:"
+          echo "   • Feature ID: ${{ steps.tracking.outputs.feature_id }}"
+          echo "   • Timestamp: $(date '+%Y-%m-%d %H:%M:%S UTC')"
+          echo "   • Repositorio: ${{ github.repository }}"
+          echo "   • Workflow Run: ${{ github.run_id }}"
+          echo "   • Ejecutado por: ${{ github.actor }}"
+          echo ""
+          echo "🎯 PRÓXIMOS PASOS:"
+          echo "   1. Comité evaluará la solicitud"
+          echo "   2. Se determinará feasibilidad y esfuerzo"
+          echo "   3. Se priorizará en roadmap del producto"
+          echo "   4. Se notificará decisión al solicitante"
