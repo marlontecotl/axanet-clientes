@@ -244,3 +244,4 @@ Este proyecto está bajo la Licencia MIT - ver el archivo [LICENSE](LICENSE) par
 Proyecto académico desarrollado para demostrar conceptos de estructuras de datos y programación orientada a objetos en Python.
 
 ¡Perfecto para estudiantes que quieren entender cómo funcionan las tablas hash en aplicaciones reales!
+# Test AWS Integration - Mon Oct 27 18:17:30 CST 2025
