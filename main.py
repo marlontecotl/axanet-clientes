@@ -86,7 +86,7 @@ class AplicacionAxanet:
     def mostrar_menu(self):
         """Muestra las opciones disponibles en el menú principal."""
         print("\n📋 MENÚ PRINCIPAL")
-        print("─" * 40)
+        print("─" * 35)
         print("1. 📝 Crear nuevo cliente")
         print("2. 🔍 Buscar cliente por nombre") 
         print("3. 📊 Ver todos los clientes")
